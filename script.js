@@ -143,7 +143,7 @@ async function createGroup(student1, student2) {
     student1Id: student1,
     student2Id: student2,
     poolMoney: 0,
-    status: "active",
+    active_status: true,
   };
 
   try {
@@ -198,8 +198,7 @@ async function placeBet(groupId, betOnId, amount) {
     groupId: groupId,
     betOnId: betOnId,
     amount: amount,
-    status: "active",
-    date: new Date().toLocaleDateString(),
+    active_status: true,
   };
 
   try {
@@ -268,12 +267,12 @@ function resolveBet(groupId, betId, winningId) {
     fetch(`${API_BASE}/groups/${groupId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "inactive" }),
+      body: JSON.stringify({ active_status: false }),
     });
     fetch(`${API_BASE}/bets/${betId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "inactive" }),
+      body: JSON.stringify({ active_status: false }),
     });
   } catch (error) {
     console.error("Error updating group or bet status:", error);
