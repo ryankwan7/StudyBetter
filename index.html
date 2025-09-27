@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Study better with Study-Better!</title>
+  <!-- Tiny, clean starter you can extend. Everything is in ONE file. -->
+  <style>
+    /* ================ CSS: think of this as global constants + layout rules ================ */
+    :root {
+      --bg: #0b0f19;
+      --fg: #e6e9ef;
+      --muted: #9aa3b2;
+      --acc: #7c9cff;
+      --card: #121826;
+      --card-border: #1f2a44;
+      --header-bg: #2F3061;
+      --header-h: 155px;         /* tweak if your header is taller/shorter */
+      --slip-bg: darkorange;    /* panel color */
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg); color: var(--fg);
+      display: grid; grid-template-rows: auto 1fr auto; /* header, main, footer */
+    }
+    html {scroll-behavior: smooth;}
+
+    /* --- Utilities (like helper functions in C++) --- */
+    .container { width: min(1100px, 92vw); margin-inline: auto; }
+    .btn { display: inline-flex; align-items: center; gap: .5rem; border: 1px solid var(--card-border);
+           background: transparent; color: var(--fg); padding: .6rem 1rem; border-radius: .75rem; cursor: pointer; }
+    .btn:hover { border-color: var(--acc); box-shadow: 0 0 0 3px color-mix(in oklab, var(--acc) 30%, transparent); }
+
+    /* --- Header / Nav --- */
+    header { position: sticky; top: 0; backdrop-filter: blur(64px); background-color: var(--header-bg);border-bottom: 1px solid var(--card-border);
+             border-bottom: 1px solid var(--card-border); }
+    nav { display: flex; align-items: center; justify-content: space-between; padding: .8rem 0; }
+    .brand { font-weight: 750; letter-spacing: .3px; font-size: 2.5rem;color: darkorange; margin-left: -4.5rem; }
+    .login-btn { background-color: darkorange; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem;}
+    .login-btn:hover {background-color: #cc5500;}
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { color: #ffffff;; text-decoration: none; font-size: 1.5rem; }
+    .nav-links a:hover, .nav-links a:focus { color: darkorange; }
+    /* === Two-column layout === */
+    .layout {display: grid; grid-template-columns: 200px 1fr; gap: 0;}
+    .sidebar {background-color: var(--header-bg); min-height: calc(100vh - 60px);padding: 1rem; position: sticky; top: 60px;}
+
+    /* === Toggle button at top of sidebar === */
+    .menu-toggle {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid rgba(0,0,0,.2);
+      border-radius: 0.5rem;
+      background: rgba(0,0,0,.15);  /* subtle contrast on orange */
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* === Hidden menu (shows on hover) === */
+    .menu {
+      display: grid;
+      gap: 0.4rem;
+      margin-top: 0.6rem;
+
+      /* start collapsed */
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 180ms ease;
+    }
+
+    /* Show the menu when hovering the sidebar or the button */
+    .sidebar:hover .menu,
+    .menu-toggle:focus + .menu {
+      max-height: 500px; /* big enough to reveal all items */
+    }
+
+    /* Sidebar links */
+    .menu a {
+      display: block;
+      padding: 0.5rem 0.6rem;
+      border-radius: 0.4rem;
+      text-decoration: none;
+      color: white;
+      background: rgba(0,0,0,.12);
+    }
+    .menu a:hover,
+    .menu a:focus {
+      background: rgba(0,0,0,.22);
+    }
+
+    /* Mobile tweak: stack columns */
+    @media (max-width: 720px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; min-height: auto; top: 0; }
+    }
+
+    .cat-box {
+      background-color: #222;    /* dark gray background */
+      width: 50%;               /* full width of content container */
+      height: 400px;             /* temporary height, just to see the box */
+      border-radius: 8px;        /* rounded corners */
+      margin-top: 1rem;          /* space above box */
+      margin-left: 1rem;   /* pushes the box away from sidebar */
+      margin-right: 1rem;
+      padding: 1rem;             /* inner spacing */
+      color: white;              /* text inside will be white */}
+
+    h2 {margin-left: 100px; /* pushes it to the right */}
+    .slip-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      margin-bottom: .75rem;
+      color: var(--muted);
+      font-size: .9rem;}
+    .slip-head .slip-col { opacity: .9; }
+
+    /* each event row = 2 columns: teams | odds buttons */
+    .event {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1rem;
+      align-items: center;
+      padding: .6rem 0;}
+
+    /* left column */
+    .teams .team {
+      font-weight: 700;
+      letter-spacing: .3px;}
+    .teams .vs {
+      font-size: .8rem;
+      color: var(--muted);
+      margin: .2rem 0 .35rem;}
+
+    /* right column (buttons stacked) */
+    .odds {
+      display: grid;
+      gap: .5rem;
+      width: 92px;           /* keeps buttons same width */
+      justify-items: end;    /* align to the right edge */}
+
+    /* the moneyline buttons */
+    .odd-btn {
+      display: inline-block;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight: 800;
+      border: none;
+      border-radius: .35rem;
+      padding: .45rem .7rem;
+      background: #2a2a2a;
+      color: #ffd37a;        /* default amberish */
+      cursor: pointer;}
+    .odd-btn.pos { color: #ffdf99; }  /* + money */
+    .odd-btn.neg { color: #ffb347; }  /* - money */
+
+    .odd-btn:hover { filter: brightness(1.1); }
+    .odd-btn:active { transform: translateY(1px); }
+
+    /* thin separator line between events */
+    .event-sep {
+      border: 0;
+      height: 1px;
+      background: rgba(255,255,255,.15);
+      margin: 3rem 0 3rem;}
+
+    /* make space from sidebar if you haven’t already */
+    .cat-box { margin-left: 1rem; margin-right: 1rem; }
+
+
+    /* --- Hero section --- */
+    .hero { padding: 3rem 0 1rem; }
+    .hero h1 { font-size: clamp(1.6rem, 4vw + 1rem, 3rem); margin: 0 0 .5rem; }
+    .hero p { color: var(--muted); margin: 0 0 1.25rem; }
+
+    /* --- Feature cards --- */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+    .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 1rem; padding: 1rem; }
+    .card h3 { margin: 0 0 .3rem; font-size: 1.05rem; }
+    .card p { margin: 0; color: var(--muted); }
+
+    /* --- Footer --- */
+    footer { border-top: 1px solid var(--card-border); padding: 1rem 0; color: var(--muted); }
+
+    /* Right-side pop panel (hidden by default) */
+    .slip-panel {
+      position: fixed;                /* stays below header, along right edge */
+      top: var(--header-h);
+      right: 1rem;
+      width: 350px;                   /* adjust to taste */
+      min-height: 140px;              /* smaller than your cat-box */
+      max-height: 60vh;               /* don’t grow too tall */
+      background: var(--slip-bg);     /* darkorange */
+      color: #111;                    /* readable on orange */
+      border-radius: 10px;
+      padding: 12px 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      z-index: 20;                    /* above page content */
+      display: none;                  /* start hidden */
+      margin-right: 3rem;
+
+    }
+
+    /* simple show/hide toggles */
+    .slip-panel.show { display: block; }
+
+    /* optional: subtle animation */
+    .slip-panel.animate-in {
+      animation: slipIn 160ms ease-out;
+    }
+    @keyframes slipIn {
+      from { transform: translateY(-6px); opacity: 0.0; }
+      to   { transform: translateY(0);    opacity: 1.0; }
+    }
+
+
+    /* --- Small screen tweaks --- */
+    @media (max-width: 520px) {
+      .nav-links { display: none; } /* keep it ultra simple for now */}
+  </style>
+</head>
+<body>
+  <!-- ================ HTML: structure (think: data layout / structs) ================ -->
+  <header>
+    <div class="container">
+      <nav>
+        <div class="brand">Study-Better</div>
+        <div class="nav-links">
+          <a href="#FAS">Home</a>
+          <a href="#My Bets">My bets</a>
+          <a href="#Account">Accocunt</a>
+          <a href="#login" class="login-btn">Log in</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+  <div id="slipPanel" class="slip-panel" role="region" aria-label="Selection panel">
+    <!-- We’ll fill this from JS when a button is clicked -->
+  </div>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <button class="menu-toggle" aria-expanded="false" aria-controls="side-menu">
+        SIMON FRASER UNIVERSITY
+      </button>
+
+      <nav id="side-menu" class="menu" aria-label="Sidebar">
+        <a href="#FAS">FAS</a>
+        <a href="#FCAT">FCAT</a>
+        <a href="#FASS">FASS</a>
+        <a href="#BEEDIE">BEEDIE</a>
+        <a href="#FHS">FHS</a>
+        <a href="#EDUC">EDUC</a>
+      </nav>
+     </aside>
+
+    <section id="FAS">
+      <h2>Simon Fraser University / FAS</h2>
+      <div class="cat-box">
+        <header class="slip-head">
+          <span class="slip-date">Sat Dec 20</span>
+          <span class="slip-col">Moneyline</span>
+        </header>
+
+        <div class="event">
+          <div class="teams">
+            <div class="team">Barsin Tfz – CMPT125</div>
+            <div class="vs">vs</div>
+            <div class="team">Ryan Kwan – MACM316</div>
+          </div>
+
+          <div class="odds">
+            <button class="odd-btn pos">+300</button>
+            <button class="odd-btn neg">-200</button>
+          </div>
+        </div>
+
+        <hr class="event-sep">
+        <div class="event">
+          <div class="teams">
+            <div class="team">Arielle Felicia – CMPT459</div>
+            <div class="vs">vs</div>
+            <div class="team">Ibraheem Masood – CMPT225</div>
+          </div>
+
+          <div class="odds">
+            <button class="odd-btn pos">+300</button>
+            <button class="odd-btn neg">-200</button>
+          </div>
+        </div>
+
+      </div>
+      <p>This is the first category content that shows up in the main page area.</p>
+    </section>
+  </main>
+
+
+  <footer>
+    <div class="container">© <span id="year"></span> Barsin. Built with vanilla HTML/CSS/JS.</div>
+  </footer>
+
+  <template id="toastTmpl">
+    <div role="status" aria-live="polite" style="position:fixed; right:1rem; bottom:1rem; background:var(--card); color:var(--fg); border:1px solid var(--card-border); padding:.7rem 1rem; border-radius:.75rem; box-shadow: 0 6px 22px rgba(0,0,0,.35);">
+      <strong>Demo ran ✔</strong><div style="color:var(--muted)">This is a tiny JS interaction.</div>
+    </div>
+  </template>
+
+  <script>
+    // ================ JS: behavior (think: event handlers / state machines) ================
+    "use strict";
+    // Minimal state (like a few globals):
+    const $ = (sel, el=document) => el.querySelector(sel);
+
+    // Footer year
+    $('#year').textContent = new Date().getFullYear();
+
+
+    // --- Odds buttons -> open right-side panel ---
+    const slipPanel = document.getElementById('slipPanel');
+
+    function openSlipPanel(payloadHtml) {
+      // inject some placeholder content for now
+      slipPanel.innerHTML = payloadHtml;
+      slipPanel.classList.add('show', 'animate-in');
+      // remove animation class after it runs (so future opens animate again)
+      setTimeout(() => slipPanel.classList.remove('animate-in'), 200);
+    }
+
+    // close if you click the panel itself (optional)
+    slipPanel.addEventListener('click', () => {
+      slipPanel.classList.remove('show');
+    });
+
+    // attach to all moneyline buttons
+    document.querySelectorAll('.odd-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        // find teams text near the clicked button
+        const eventEl = e.currentTarget.closest('.event');
+        const teams = Array.from(eventEl.querySelectorAll('.team')).map(t => t.textContent.trim());
+        const price = e.currentTarget.textContent.trim();
+
+        // simple payload (you’ll replace with real content later)
+        const html = `
+          <strong>Selection added</strong>
+          <div style="margin-top:.4rem">
+            ${teams[0]} <em style="opacity:.8">vs</em> ${teams[1]}
+          </div>
+          <div style="margin-top:.3rem">Price: <code>${price}</code></div>
+          <div style="margin-top:.6rem; font-size:.9rem; opacity:.9">[More controls will go here]</div>
+        `;
+
+        openSlipPanel(html);
+      });
+    });
+
+  </script>
+</body>
+</html>
