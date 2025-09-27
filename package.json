@@ -1,0 +1,24 @@
+{
+  "name": "studybetter",
+  "version": "1.0.0",
+  "description": "Hitting the books.",
+  "main": "organiser_script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ryankwan7/StudyBetter.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ryankwan7/StudyBetter/issues"
+  },
+  "homepage": "https://github.com/ryankwan7/StudyBetter#readme",
+  "dependencies": {
+    "better-sqlite3": "^12.4.1",
+    "pg": "^8.16.3"
+  }
+}
