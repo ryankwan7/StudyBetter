@@ -63,3 +63,18 @@ function placeBet(betOnId, amount){
     bets.push(newBet);
     console.log("Bet placed successfully");
 }
+
+function resolveBet(betId, winningId){
+    bet = bets.find(b => b.id === betId);
+    if (!bet) throw new Error("Bet not found");
+
+    if (bet.betOnId === winningId) {
+        let winnings = bet.amount * 2;
+        let better = betters.find(b => b.id === bet.betterId);
+        better.money += winnings;
+        console.log(`Bet won! ${better.name} received $${winnings}`);
+    }
+    else{
+        console.log("Bet lost.");
+    }
+}
