@@ -3,13 +3,10 @@ let betters = [];
 let students = [];
 let organizers = [];
 let bets = [];
+let groups = [];
 let userType = null; // "better" or "organizer"
 
 const API_BASE = "http://localhost:3000";
-
-async function initApp() {
-  await loadInitialData();
-}
 
 async function loadInitialData() {
   try {
@@ -20,17 +17,20 @@ async function loadInitialData() {
       studentsResponse,
       betsResponse,
       organizersResponse,
+      groupsResponse,
     ] = await Promise.all([
       fetch(`${API_BASE}/better`),
       fetch(`${API_BASE}/students`),
       fetch(`${API_BASE}/bets`),
       fetch(`${API_BASE}/organizers`),
+      fetch(`${API_BASE}/groups`),
     ]);
 
     betters = bettersResponse.ok ? await bettersResponse.json() : [];
     students = studentsResponse.ok ? await studentsResponse.json() : [];
     bets = betsResponse.ok ? await betsResponse.json() : [];
     organizers = organizersResponse.ok ? await organizersResponse.json() : [];
+    groups = groupsResponse.ok ? await groupsResponse.json() : [];
 
     console.log("Data loaded successfully");
   } catch (error) {
@@ -58,7 +58,7 @@ function loadHardcodedData() {
   ];
 }
 
-function loginUser(username) {
+function loginUser(username, password) {
   let user = betters.find(
     (s) => s.username.toLowerCase() === username.toLowerCase().trim()
   );
@@ -66,17 +66,26 @@ function loginUser(username) {
     console.log("User not found");
     return;
   }
+  if (user.password !== password) {
+    console.log("Incorrect password");
+    return;
+  }
   currentUser = user;
   userType = "better";
 }
 
-function loginOrganizer(username) {
+function loginOrganizer(username, password) {
   let user = organizers.find(
     (o) => o.username.toLowerCase() === username.toLowerCase().trim()
   );
 
   if (!user) {
     console.log("Organizer not found");
+    return;
+  }
+
+  if (user.password !== password) {
+    console.log("Incorrect password");
     return;
   }
   currentUser = user;
@@ -88,10 +97,11 @@ function logoutUser() {
   userType = null;
 }
 
-async function registerStudent(name, school, faculty) {
+async function registerStudent(first_name, last_name, school, faculty) {
   let newStudent = {
     id: students.length + 1,
-    name: name,
+    first_name: first_name,
+    last_name: last_name,
     school: school,
     faculty: faculty,
   };
@@ -116,7 +126,48 @@ async function registerStudent(name, school, faculty) {
   console.log("Student registered successfully");
 }
 
-async function placeBet(betOnId, amount) {
+async function createGroup(student1, student2) {
+  const student1Exists = getStudentById(student1);
+  const student2Exists = getStudentById(student2);
+
+  if (!student1Exists || !student2Exists) {
+    throw new Error("One or both students not found");
+  }
+
+  if (student1 === student2) {
+    throw new Error("Cannot create group with the same student");
+  }
+
+  let newGroup = {
+    id: groups.length + 1,
+    student1Id: student1,
+    student2Id: student2,
+    poolMoney: 0,
+    status: "active",
+  };
+
+  try {
+    const response = await fetch(`${API_BASE}/groups`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(newGroup),
+    });
+
+    if (response.ok) {
+      const savedGroup = await response.json();
+      newGroup = savedGroup;
+    }
+  } catch (error) {
+    console.error("Error saving group to server:", error);
+  }
+
+  groups.push(newGroup);
+  console.log("Group created successfully");
+}
+
+async function placeBet(groupId, betOnId, amount) {
   if (!currentUser) {
     throw new Error("No user logged in");
   }
@@ -133,9 +184,18 @@ async function placeBet(betOnId, amount) {
     throw new Error("Bet amount must be positive");
   }
 
+  const group = groups.find((g) => g.id === groupId);
+  if (!group) {
+    throw new Error("Group not found");
+  }
+  if (!betOnId !== group.student1Id && betOnId !== group.student2Id) {
+    throw new Error("Bet must be placed on a member of the group");
+  }
+
   let newBet = {
     id: bets.length + 1,
     betterId: currentUser.id,
+    groupId: groupId,
     betOnId: betOnId,
     amount: amount,
     status: "active",
@@ -159,24 +219,74 @@ async function placeBet(betOnId, amount) {
     console.error("Error saving bet to server:", error);
   }
 
+  const newPoolMoney = group.poolMoney + amount;
+  try {
+    await fetch(`${API_BASE}/groups/${groupId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ poolMoney: newPoolMoney }),
+    });
+  } catch (error) {
+    console.error("Error updating group pool money:", error);
+  }
+
   currentUser.money -= amount;
+  group.poolMoney += amount;
+
   bets.push(newBet);
   console.log("Bet placed successfully");
 }
 
-function resolveBet(betId, winningId) {
+function resolveBet(groupId, betId, winningId) {
   let bet = bets.find((b) => b.id === betId);
   if (!bet) throw new Error("Bet not found");
 
+  let group = groups.find((g) => g.id === groupId);
+  if (!group) throw new Error("Group not found");
+
+  if (bet.groupId !== groupId) {
+    throw new Error("Bet does not belong to this group");
+  }
+
+  if (bet.status !== "active") {
+    throw new Error("Bet is not active");
+  }
+
+  let better = getBetterById(bet.betterId);
+  if (!better) throw new Error("Better not found");
+
   if (bet.betOnId === winningId) {
     let winnings = bet.amount * 2;
-    let better = betters.find((b) => b.id === bet.betterId);
     better.money += winnings;
+
     console.log(`Bet won! ${better.name} received $${winnings}`);
   } else {
     console.log("Bet lost.");
   }
-  bet.status = "inactive";
+
+  try {
+    fetch(`${API_BASE}/groups/${groupId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "inactive" }),
+    });
+    fetch(`${API_BASE}/bets/${betId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "inactive" }),
+    });
+  } catch (error) {
+    console.error("Error updating group or bet status:", error);
+  }
+  try {
+    fetch(`${API_BASE}/betters/${bet.betterId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ money: better.money }),
+    });
+  } catch (error) {
+    console.error("Error updating better's money:", error);
+  }
 }
 
 function getStudentById(id) {
