@@ -188,9 +188,6 @@ async function placeBet(groupId, betOnId, amount) {
   if (!group) {
     throw new Error("Group not found");
   }
-  if (!betOnId !== group.student1Id && betOnId !== group.student2Id) {
-    throw new Error("Bet must be placed on a member of the group");
-  }
 
   let newBet = {
     id: bets.length + 1,
