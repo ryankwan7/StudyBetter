@@ -65,7 +65,7 @@ function placeBet(betOnId, amount){
 }
 
 function resolveBet(betId, winningId){
-    bet = bets.find(b => b.id === betId);
+    let bet = bets.find(b => b.id === betId);
     if (!bet) throw new Error("Bet not found");
 
     if (bet.betOnId === winningId) {
