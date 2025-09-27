@@ -184,12 +184,9 @@ async function placeBet(groupId, betOnId, amount) {
     throw new Error("Bet amount must be positive");
   }
 
-  const group = groups.find((g) => g.id === groupId);
+  const group = getGroupById(groupId);
   if (!group) {
     throw new Error("Group not found");
-  }
-  if (!betOnId !== group.student1Id && betOnId !== group.student2Id) {
-    throw new Error("Bet must be placed on a member of the group");
   }
 
   let newBet = {
@@ -237,17 +234,17 @@ async function placeBet(groupId, betOnId, amount) {
 }
 
 function resolveBet(groupId, betId, winningId) {
-  let bet = bets.find((b) => b.id === betId);
+  let bet = getBetById(betId);
   if (!bet) throw new Error("Bet not found");
 
-  let group = groups.find((g) => g.id === groupId);
+  let group = getGroupById(groupId);
   if (!group) throw new Error("Group not found");
 
   if (bet.groupId !== groupId) {
     throw new Error("Bet does not belong to this group");
   }
 
-  if (bet.status !== "active") {
+  if (!bet.active_status) {
     throw new Error("Bet is not active");
   }
 
@@ -294,6 +291,14 @@ function getStudentById(id) {
 
 function getBetterById(id) {
   return betters.find((b) => b.id === id) || null;
+}
+
+function getGroupById(id) {
+  return groups.find((g) => g.id === id) || null;
+}
+
+function getBetById(id) {
+  return bets.find((b) => b.id === id) || null;
 }
 
 function getBetsForCurrentUser() {
