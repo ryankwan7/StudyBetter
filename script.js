@@ -7,10 +7,6 @@ let userType = null; // "better" or "organizer"
 
 const API_BASE = "http://localhost:3000";
 
-async function initApp() {
-  await loadInitialData();
-}
-
 async function loadInitialData() {
   try {
     console.log("Loading initial data...");
@@ -58,7 +54,7 @@ function loadHardcodedData() {
   ];
 }
 
-function loginUser(username) {
+function loginUser(username, password) {
   let user = betters.find(
     (s) => s.username.toLowerCase() === username.toLowerCase().trim()
   );
@@ -66,17 +62,26 @@ function loginUser(username) {
     console.log("User not found");
     return;
   }
+  if (user.password !== password) {
+    console.log("Incorrect password");
+    return;
+  }
   currentUser = user;
   userType = "better";
 }
 
-function loginOrganizer(username) {
+function loginOrganizer(username, password) {
   let user = organizers.find(
     (o) => o.username.toLowerCase() === username.toLowerCase().trim()
   );
 
   if (!user) {
     console.log("Organizer not found");
+    return;
+  }
+
+  if (user.password !== password) {
+    console.log("Incorrect password");
     return;
   }
   currentUser = user;
@@ -88,10 +93,11 @@ function logoutUser() {
   userType = null;
 }
 
-async function registerStudent(name, school, faculty) {
+async function registerStudent(first_name, last_name, school, faculty) {
   let newStudent = {
     id: students.length + 1,
-    name: name,
+    first_name: first_name,
+    last_name: last_name,
     school: school,
     faculty: faculty,
   };
