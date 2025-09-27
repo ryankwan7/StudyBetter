@@ -15,7 +15,7 @@
       --card: #121826;
       --card-border: #1f2a44;
       --header-bg: #2F3061;
-      --header-h: 155px;         /* tweak if your header is taller/shorter */
+      --header-h: 160px;         /* tweak if your header is taller/shorter */
       --slip-bg: darkorange;    /* panel color */
     }
     html, body { height: 100%; }
@@ -45,6 +45,38 @@
     /* === Two-column layout === */
     .layout {display: grid; grid-template-columns: 200px 1fr; gap: 0;}
     .sidebar {background-color: var(--header-bg); min-height: calc(100vh - 60px);padding: 1rem; position: sticky; top: 60px;}
+    /* --- My bets dropdown --- */
+    .nav-links { position: relative; }
+
+    .menu-dd {
+      position: absolute;
+      top: 100%;                 /* directly below the nav links */
+      right: 0;                  /* aligns to right edge; change to left:0 if you prefer */
+      display: none;
+      background: #121826;
+      border: 1px solid var(--card-border);
+      border-radius: .6rem;
+      padding: .4rem;
+      box-shadow: 0 10px 24px rgba(0,0,0,.35);
+      z-index: 30;
+      min-width: 200px;
+    }
+
+    .menu-dd.open { display: grid; gap: .3rem; }
+
+    .menu-dd button {
+      all: unset;
+      display: block;
+      width: 100%;
+      padding: .5rem .7rem;
+      border-radius: .45rem;
+      color: #e6e9ef;
+      cursor: pointer;
+    }
+    .menu-dd button:hover,
+    .menu-dd button:focus {
+      background: rgba(255,255,255,.08);
+    }
 
     /* === Toggle button at top of sidebar === */
     .menu-toggle {
@@ -108,6 +140,8 @@
       color: white;              /* text inside will be white */}
 
     h2 {margin-left: 100px; /* pushes it to the right */}
+    .motto { margin-right: 50px; font-weight: 500; font-size: 1.5rem; margin-top: 1rem;}
+    .log{margin-right: 100px;}
     .slip-head {
       display: grid;
       grid-template-columns: 1fr auto;
@@ -205,6 +239,19 @@
     /* simple show/hide toggles */
     .slip-panel.show { display: block; }
 
+    .func-box {
+      position: fixed;
+      top: 380px;            /* 👈 adjust this until it sits under your orange box */
+      right: 1rem;
+      width: 320px;
+      min-height: 250px;
+      background: #222;      /* same gray/black as cat-box */
+      color: white;
+      border-radius: 10px;
+      padding: 12px 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.3);
+      margin-right: 4.5rem;}
+
     /* optional: subtle animation */
     .slip-panel.animate-in {
       animation: slipIn 160ms ease-out;
@@ -228,14 +275,31 @@
         <div class="brand">Study-Better</div>
         <div class="nav-links">
           <a href="#FAS">Home</a>
-          <a href="#My Bets">My bets</a>
-          <a href="#Account">Accocunt</a>
-          <a href="#login" class="login-btn">Log in</a>
+          <a href="#" id="myBetsBtn">My Bets</a>
+          <div id="myBetsMenu" class="menu-dd" role="menu" aria-labelledby="myBetsBtn">
+          <button role="menuitem">Open Bets</button>
+          <button role="menuitem">Settled Bets</button>
+          <button role="menuitem">Pending</button>
+          <button role="menuitem">Promotions</button>
+          <button role="menuitem">Settings</button>
+        </div>
+
+          <a href="#Account">Account</a>
+          <a href="login.html" class="login-btn">Log in</a>
         </div>
       </nav>
     </div>
   </header>
-  <div id="slipPanel" class="slip-panel" role="region" aria-label="Selection panel">
+<!-- place this right after </header> (before <main>) -->
+  <aside class="right-rail" aria-label="Right rail">
+    <div id="slipPanel" class="slip-panel" role="region" aria-label="Selection panel"></div>
+
+    <!-- NEW: gray/black box under the orange panel -->
+    <div id="funcBox" class="func-box">
+      <strong>ACTIVE BETS</strong>
+      <p style="opacity:.85" class="log">Please log-in to see your active bets</p>
+    </div>
+  </aside>
     <!-- We’ll fill this from JS when a button is clicked -->
   </div>
 
@@ -291,7 +355,7 @@
         </div>
 
       </div>
-      <p>This is the first category content that shows up in the main page area.</p>
+      <p class="motto">Harnessing the sprit of competition!!👀</p>
     </section>
   </main>
 
@@ -327,10 +391,6 @@
       setTimeout(() => slipPanel.classList.remove('animate-in'), 200);
     }
 
-    // close if you click the panel itself (optional)
-    slipPanel.addEventListener('click', () => {
-      slipPanel.classList.remove('show');
-    });
 
     // attach to all moneyline buttons
     document.querySelectorAll('.odd-btn').forEach(btn => {
@@ -353,6 +413,42 @@
         openSlipPanel(html);
       });
     });
+    // --- "My bets" dropdown ---
+    const myBetsBtn  = document.getElementById('myBetsBtn');
+    const myBetsMenu = document.getElementById('myBetsMenu');
+
+    if (myBetsBtn && myBetsMenu) {
+      myBetsBtn.setAttribute('aria-haspopup', 'menu');
+      myBetsBtn.setAttribute('aria-expanded', 'false');
+
+      myBetsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const open = myBetsMenu.classList.toggle('open');
+        myBetsBtn.setAttribute('aria-expanded', String(open));
+      });
+
+      // close when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!myBetsMenu.classList.contains('open')) return;
+        const within = myBetsMenu.contains(e.target) || myBetsBtn.contains(e.target);
+        if (!within) {
+          myBetsMenu.classList.remove('open');
+          myBetsBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      // basic keyboard UX
+      myBetsBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          myBetsMenu.classList.add('open');
+          myBetsBtn.setAttribute('aria-expanded', 'true');
+          const first = myBetsMenu.querySelector('button');
+          first && first.focus();
+        }
+      });
+    }
+
 
   </script>
 </body>
