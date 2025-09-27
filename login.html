@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Log in • Study-Better</title>
+  <style>
+    :root{
+      /* reuse your header color */
+      --header-bg: #2F3061;   /* same as your main site */
+      --accent: darkorange;   /* for the Log in button hover etc. */
+    }
+
+    /* page colors */
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #ffffff;      /* white background */
+      color: #111;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    /* header */
+    header{
+      background: var(--header-bg);
+      color: #fff;
+      padding: 12px 16px;
+      text-align: center;
+      font-size: large;
+    }
+
+    /* headline centered above the form */
+    .intro{
+      text-align: center;
+      margin: 2rem 0 1.25rem;
+      font-weight: 600;
+      font-size: 1.25rem;
+    }
+
+    /* card-like form */
+    .card{
+      width: min(520px, 92vw);
+      margin: 0 auto;
+      background: #f7f7f9;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: 0 10px 24px rgba(0,0,0,.06);
+    }
+    form{ display: grid; gap: 0.9rem; }
+
+    label span{
+      display:block;
+      margin-bottom: 0.35rem;
+      font-size: 0.95rem;
+      color: #333;
+      font-weight: 600;
+    }
+    input[type="text"], input[type="password"]{
+      width: 100%;
+      padding: 0.65rem 0.75rem;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: #111;
+      outline: none;
+    }
+    input:focus{
+      border-color: var(--header-bg);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--header-bg) 20%, transparent);
+    }
+
+    .actions{
+      display: flex; gap: .75rem; justify-content: center; margin-top: .5rem;
+    }
+    .btn{
+      border: 1px solid #d1d5db;
+      background: #fff;
+      padding: .6rem 1rem;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .btn.primary{
+      background: var(--header-bg);
+      color: #fff;
+      border-color: var(--header-bg);
+    }
+    .btn.primary:hover{ filter: brightness(1.08); }
+    .btn:active{ transform: translateY(1px); }
+
+    /* tiny footer link back */
+    .small{
+      text-align: center;
+      margin-top: 1rem;
+      font-size: .9rem;
+    }
+    .small a{ color: var(--header-bg); text-decoration: none; }
+    .small a:hover{ text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap"><strong>Study-Better</strong></div>
+  </header>
+
+  <main class="wrap">
+    <div class="intro">Please log in to continue</div>
+
+    <div class="card" role="form" aria-labelledby="login-title">
+      <form id="loginForm" novalidate>
+        <label>
+          <span>Username</span>
+          <input type="text" name="username" autocomplete="username" required />
+        </label>
+        <label>
+          <span>Password</span>
+          <input type="password" name="password" autocomplete="current-password" required />
+        </label>
+        <div class="actions">
+          <button type="submit" class="btn primary">Log in</button>
+          <button type="button" class="btn" onclick="history.back()">Cancel</button>
+        </div>
+      </form>
+      <div class="small">Back to <a href="index.html">home</a></div>
+    </div>
+  </main>
+
+  <script>
+    // Temporary: client-side guard so you can test without a backend.
+    const form = document.getElementById('loginForm');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(form).entries());
+      if(!data.username?.trim() || !data.password?.trim()){
+        alert('Please fill in both username and password.');
+        return;
+      }
+      // TODO: replace with a real POST to your backend
+      alert('Login form submitted (stub). You will wire this to a backend later.');
+    });
+  </script>
+</body>
+</html>
