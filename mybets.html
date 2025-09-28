@@ -190,10 +190,11 @@
             max-height: 0;
             overflow: hidden;
             transition: max-height 180ms ease;
+
         }
 
         /* Show the menu when hovering the sidebar or the button */
-        .sidebar:hover .menu,
+        .sidebar .menu,
         .menu-toggle:focus + .menu {
             max-height: 500px; /* big enough to reveal all items */
         }
@@ -568,9 +569,8 @@
     function openSlipPanel(payloadHtml) {
         // inject some placeholder content for now
         slipPanel.innerHTML = payloadHtml;
-        slipPanel.classList.add('show', 'animate-in');
+        slipPanel.classList.add('show');
         // remove animation class after it runs (so future opens animate again)
-        setTimeout(() => slipPanel.classList.remove('animate-in'), 200);
     }
 
 
