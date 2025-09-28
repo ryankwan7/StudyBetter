@@ -1,9 +1,7 @@
 let currentUser = null;
 let betters = [];
 let students = [];
-let organizers = [];
 let bets = [];
-let userType = null; // "better" or "organizer"
 
 const API_BASE = "http://localhost:3000";
 
@@ -15,22 +13,17 @@ async function loadInitialData() {
   try {
     console.log("Loading initial data...");
 
-    const [
-      bettersResponse,
-      studentsResponse,
-      betsResponse,
-      organizersResponse,
-    ] = await Promise.all([
-      fetch(`${API_BASE}/better`),
-      fetch(`${API_BASE}/students`),
-      fetch(`${API_BASE}/bets`),
-      fetch(`${API_BASE}/organizers`),
-    ]);
+    const [bettersResponse, studentsResponse, betsResponse] = await Promise.all(
+      [
+        fetch(`${API_BASE}/better`),
+        fetch(`${API_BASE}/students`),
+        fetch(`${API_BASE}/bets`),
+      ]
+    );
 
     betters = bettersResponse.ok ? await bettersResponse.json() : [];
     students = studentsResponse.ok ? await studentsResponse.json() : [];
     bets = betsResponse.ok ? await betsResponse.json() : [];
-    organizers = organizersResponse.ok ? await organizersResponse.json() : [];
 
     console.log("Data loaded successfully");
   } catch (error) {
@@ -43,9 +36,10 @@ function loadHardcodedData() {
   students = [
     {
       id: 1,
+      username: "alice123",
       name: "Alice",
       school: "SFU",
-      faculty: "Computer Science",
+      major: "Computer Science",
     },
   ];
   betters = [
@@ -62,58 +56,7 @@ function loginUser(username) {
   let user = betters.find(
     (s) => s.username.toLowerCase() === username.toLowerCase().trim()
   );
-  if (!user) {
-    console.log("User not found");
-    return;
-  }
-  currentUser = user;
-  userType = "better";
-}
-
-function loginOrganizer(username) {
-  let user = organizers.find(
-    (o) => o.username.toLowerCase() === username.toLowerCase().trim()
-  );
-
-  if (!user) {
-    console.log("Organizer not found");
-    return;
-  }
-  currentUser = user;
-  userType = "organizer";
-}
-
-function logoutUser() {
-  currentUser = null;
-  userType = null;
-}
-
-async function registerStudent(name, school, faculty) {
-  let newStudent = {
-    id: students.length + 1,
-    name: name,
-    school: school,
-    faculty: faculty,
-  };
-  try {
-    const response = await fetch(`${API_BASE}/students`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(newStudent),
-    });
-
-    if (response.ok) {
-      const savedStudent = await response.json();
-      newStudent = savedStudent;
-    }
-  } catch (error) {
-    console.error("Error saving student to server:", error);
-  }
-
-  students.push(newStudent);
-  console.log("Student registered successfully");
+  currentUser = user || null;
 }
 
 async function placeBet(betOnId, amount) {
@@ -192,10 +135,39 @@ function getBetsForCurrentUser() {
   return bets.filter((b) => b.betterId === currentUser.id);
 }
 
-function isBetter() {
-  return userType === "better";
-}
+function fillFromGroup(betsIndex = 0) {
+    if (!bets.length) {
+    console.warn("No bets available yet.");
+    return;
+  }
 
-function isOrganizer() {
-  return userType === "organizer";
+  const container = document.getElementById("teams");
+  container.innerHTML = ""; // clear old stuff
+
+  bets.forEach(bet => {
+    const s1 = getStudentById(bets.sid1);
+    const s2 = getStudentById(bets.sid2);
+
+    if (!s1 || !s2) {
+      console.warn("Missing student for group", group.id);
+      return;
+    }
+
+    const eventDiv = document.createElement("div");
+    eventDiv.classList.add("event");
+
+    eventDiv.innerHTML = `
+      <div class="teams">
+        <div class="team">${s1.first_name} ${s1.last_name} – ${bet.desc1}</div>
+        <div class="vs">vs</div>
+        <div class="team">${s2.first_name} ${s2.last_name} – ${group.desc2}</div>
+      </div>
+      <div class="odds">
+        <button class="odd-btn pos" onclick="placeBet(${group.id}, ${s1.id}, 50)">+300</button>
+        <button class="odd-btn neg" onclick="placeBet(${group.id}, ${s2.id}, 50)">-200</button>
+      </div>
+    `;
+
+    container.appendChild(eventDiv);
+  });
 }

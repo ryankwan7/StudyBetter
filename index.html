@@ -274,8 +274,8 @@
       <nav>
         <div class="brand">Study-Better</div>
         <div class="nav-links">
-          <a href="#FAS">Home</a>
-          <a href="#" id="myBetsBtn">My Bets</a>
+          <a href="index.html" style="color: #FF8C00FF">Home</a>
+          <a href="mybets.html" id="myBetsBtn " style="color: white">My Bets</a>
           <div id="myBetsMenu" class="menu-dd" role="menu" aria-labelledby="myBetsBtn">
           <button role="menuitem">Open Bets</button>
           <button role="menuitem">Settled Bets</button>
@@ -329,14 +329,15 @@
 
         <div class="event">
           <div class="teams">
-            <div class="team">Barsin Tfz – CMPT125</div>
+            <div class="team" id="team1"></div>
             <div class="vs">vs</div>
-            <div class="team">Ryan Kwan – MACM316</div>
+            <div class="team" id="team2"></div>
           </div>
 
           <div class="odds">
             <button class="odd-btn pos">+300</button>
             <button class="odd-btn neg">-200</button>
+            
           </div>
         </div>
 
@@ -370,6 +371,7 @@
     </div>
   </template>
 
+  <script src="script.js"> initApp(); </script>
   <script>
     // ================ JS: behavior (think: event handlers / state machines) ================
     "use strict";
