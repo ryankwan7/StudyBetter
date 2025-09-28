@@ -135,3 +135,39 @@ function getBetsForCurrentUser() {
   return bets.filter((b) => b.betterId === currentUser.id);
 }
 
+function fillFromGroup(betsIndex = 0) {
+    if (!bets.length) {
+    console.warn("No bets available yet.");
+    return;
+  }
+
+  const container = document.getElementById("teams");
+  container.innerHTML = ""; // clear old stuff
+
+  bets.forEach(bet => {
+    const s1 = getStudentById(bets.sid1);
+    const s2 = getStudentById(bets.sid2);
+
+    if (!s1 || !s2) {
+      console.warn("Missing student for group", group.id);
+      return;
+    }
+
+    const eventDiv = document.createElement("div");
+    eventDiv.classList.add("event");
+
+    eventDiv.innerHTML = `
+      <div class="teams">
+        <div class="team">${s1.first_name} ${s1.last_name} – ${bet.desc1}</div>
+        <div class="vs">vs</div>
+        <div class="team">${s2.first_name} ${s2.last_name} – ${group.desc2}</div>
+      </div>
+      <div class="odds">
+        <button class="odd-btn pos" onclick="placeBet(${group.id}, ${s1.id}, 50)">+300</button>
+        <button class="odd-btn neg" onclick="placeBet(${group.id}, ${s2.id}, 50)">-200</button>
+      </div>
+    `;
+
+    container.appendChild(eventDiv);
+  });
+}
