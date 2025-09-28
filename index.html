@@ -17,6 +17,8 @@
       --header-bg: #2F3061;
       --header-h: 160px;         /* tweak if your header is taller/shorter */
       --slip-bg: darkorange;    /* panel color */
+      --rail-w: 350px;          /* right rail width (same as your panel width) */
+      --rail-top: calc(var(--header-h) + 8px); /* rail sits just below header */
     }
     html, body { height: 100%; }
     body {
@@ -44,9 +46,96 @@
     .nav-links a:hover, .nav-links a:focus { color: darkorange; }
     /* === Two-column layout === */
     .layout {display: grid; grid-template-columns: 200px 1fr; gap: 0;}
+    /* Push main content left so it doesn't sit under the right rail */
+    main.layout{padding-right: calc(var(--rail-w) + 2rem);}
+
     .sidebar {background-color: var(--header-bg); min-height: calc(100vh - 60px);padding: 1rem; position: sticky; top: 60px;}
     /* --- My bets dropdown --- */
     .nav-links { position: relative; }
+
+    /* Hide/show the whole account section */
+    .account-view { display: none; }
+    .account-view.show { display: block; }
+
+    /* two-column account layout INSIDE the main content column */
+    .account-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr; /* left list | right content */
+      gap: 1rem;
+      margin: 1rem 1rem 0;              /* keep space from sidebar */
+    }
+
+    /* left list */
+    .account-nav {
+      background: #222;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: .5rem;
+      display: grid;
+      gap: .4rem;
+    }
+    .acct-tab {
+      all: unset;
+      display: block;
+      width: 100%;
+      padding: .55rem .7rem;
+      border-radius: .5rem;
+      color: #e6e9ef;
+      cursor: pointer;
+    }
+    .acct-tab:hover { background: rgba(255,255,255,.08); }
+    .acct-tab.is-active { background: rgba(255,255,255,.14); }
+
+    /* right content */
+    .account-content {
+      background: transparent; /* your page bg shows; add a card if you want */
+    }
+
+    /* panes */
+    .acct-pane { display: none; }
+    .acct-pane.show { display: block; }
+
+    /* profile card like your screenshot */
+    .profile-card {
+      background: #1e2140;                     /* deep indigo block */
+      border: 1px solid #3a3f72;
+      border-radius: 12px;
+      padding: .75rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
+      margin-bottom: 1rem;
+    }
+    .profile-card .card-head {
+      font-weight: 800;
+      font-size: 1.15rem;
+      margin: .2rem .2rem .6rem;
+    }
+    .profile-card .card-body {
+      background: #2a2d4f;
+      border: 1px solid #3a3f72;
+      border-radius: 10px;
+      padding: .8rem;
+      position: relative;
+    }
+    .profile-card .mini {
+      position: absolute; right: .8rem; bottom: .8rem;
+      background: #2F3061; color: #fff;
+      border: 0; border-radius: 8px; padding: .4rem .7rem; cursor: pointer;
+    }
+    .kv { margin-bottom: .55rem; }
+    .k { font-size: .8rem; color: #b6bdd0; }
+    .v { font-weight: 700; }
+
+    /* group below */
+    .group-title { margin: 1rem 0 .6rem; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: .6rem; }
+    .pill { border: 1px solid #444; border-radius: 10px; padding: .5rem .8rem; cursor: pointer; }
+    .pill.blue { background: #2F3061; color: #fff; border-color: #2F3061; }
+    .pill.red { background: #a33; color: #fff; border-color: #a33; }
+    .pill.red.outline { background: transparent; color: #e88; border-color: #a33; }
+
+    /* utility */
+    .visually-hidden { position: absolute; width:1px; height:1px; overflow:hidden; clip: rect(0 0 0 0); white-space:nowrap; }
+
 
     .menu-dd {
       position: absolute;
@@ -130,7 +219,7 @@
 
     .cat-box {
       background-color: #222;    /* dark gray background */
-      width: 50%;               /* full width of content container */
+      width: 85%;               /* full width of content container */
       height: 400px;             /* temporary height, just to see the box */
       border-radius: 8px;        /* rounded corners */
       margin-top: 1rem;          /* space above box */
@@ -192,6 +281,24 @@
     .odd-btn:hover { filter: brightness(1.1); }
     .odd-btn:active { transform: translateY(1px); }
 
+    .checkout-btn{
+      margin-top: 1rem;
+      width: 100%;
+      padding: 0.6rem 1rem;
+      background: #2F3061;   /* same indigo as header */
+      color: white;
+      font-weight: 600;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .checkout-btn:hover{
+      background: #23244a;
+    }
+
+
     /* thin separator line between events */
     .event-sep {
       border: 0;
@@ -217,40 +324,57 @@
     /* --- Footer --- */
     footer { border-top: 1px solid var(--card-border); padding: 1rem 0; color: var(--muted); }
 
-    /* Right-side pop panel (hidden by default) */
-    .slip-panel {
-      position: fixed;                /* stays below header, along right edge */
-      top: var(--header-h);
+    .right-rail{
+      position: fixed;
+      top: var(--rail-top);
       right: 1rem;
-      width: 350px;                   /* adjust to taste */
-      min-height: 140px;              /* smaller than your cat-box */
-      max-height: 60vh;               /* don’t grow too tall */
-      background: var(--slip-bg);     /* darkorange */
-      color: #111;                    /* readable on orange */
+      width: var(--rail-w);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 40;}
+
+    /* Right-side pop panel (hidden by default) */
+    /* Orange panel lives *inside* the rail; stays in flow */
+    .slip-panel{
+      position: relative;
+      width: 100%;
+      min-height: 140px;
+      max-height: 60vh;
+      background: var(--slip-bg);
+      color: #111;
       border-radius: 10px;
       padding: 12px 14px;
       box-shadow: 0 10px 30px rgba(0,0,0,.35);
-      z-index: 20;                    /* above page content */
-      display: none;                  /* start hidden */
-      margin-right: 3rem;
+      z-index: 2;
 
+      /* keep space even when “hidden” */
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 160ms ease;
     }
 
-    /* simple show/hide toggles */
-    .slip-panel.show { display: block; }
-
-    .func-box {
-      position: fixed;
-      top: 380px;            /* 👈 adjust this until it sits under your orange box */
-      right: 1rem;
-      width: 320px;
+    /* visible state (use .open instead of display:block) */
+    .slip-panel.open{
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    /* Gray box under orange panel */
+    .func-box{
+      position: relative;
+      width: 100%;
       min-height: 250px;
-      background: #222;      /* same gray/black as cat-box */
+      background: #222;
       color: white;
       border-radius: 10px;
       padding: 12px 14px;
       box-shadow: 0 8px 24px rgba(0,0,0,.3);
-      margin-right: 4.5rem;}
+      z-index: 1;
+      /* no margins; the rail’s gap controls spacing */
+    }
+
 
     /* optional: subtle animation */
     .slip-panel.animate-in {
@@ -274,8 +398,8 @@
       <nav>
         <div class="brand">Study-Better</div>
         <div class="nav-links">
-          <a href="index.html" style="color: #FF8C00FF">Home</a>
-          <a href="mybets.html" id="myBetsBtn " style="color: white">My Bets</a>
+          <a href="#FAS">Home</a>
+          <a href="#" id="myBetsBtn">My Bets</a>
           <div id="myBetsMenu" class="menu-dd" role="menu" aria-labelledby="myBetsBtn">
           <button role="menuitem">Open Bets</button>
           <button role="menuitem">Settled Bets</button>
@@ -284,7 +408,7 @@
           <button role="menuitem">Settings</button>
         </div>
 
-          <a href="#Account">Account</a>
+          <a href="#account" id="accountLink">Account</a>
           <a href="login.html" class="login-btn">Log in</a>
         </div>
       </nav>
@@ -301,7 +425,6 @@
     </div>
   </aside>
     <!-- We’ll fill this from JS when a button is clicked -->
-  </div>
 
   <main class="layout">
     <aside class="sidebar">
@@ -329,15 +452,14 @@
 
         <div class="event">
           <div class="teams">
-            <div class="team" id="team1"></div>
+            <div class="team">Barsin Tfz – CMPT125</div>
             <div class="vs">vs</div>
-            <div class="team" id="team2"></div>
+            <div class="team">Ryan Kwan – MACM316</div>
           </div>
 
           <div class="odds">
             <button class="odd-btn pos">+300</button>
             <button class="odd-btn neg">-200</button>
-            
           </div>
         </div>
 
@@ -358,6 +480,59 @@
       </div>
       <p class="motto">Harnessing the sprit of competition!!👀</p>
     </section>
+            <section id="account" class="account-view" aria-labelledby="account-title">
+          <h2 id="account-title" class="visually-hidden">Account</h2>
+
+          <div class="account-layout">
+            <!-- Left list (secondary column) -->
+            <nav class="account-nav" aria-label="Account sections">
+              <button class="acct-tab is-active" data-target="profile">Profile</button>
+              <button class="acct-tab" data-target="security">Security</button>
+              <button class="acct-tab" data-target="preferences">Preferences</button>
+              <button class="acct-tab" data-target="billing">Billing</button>
+            </nav>
+
+            <!-- Right content area -->
+            <div class="account-content">
+              <!-- Profile pane (default visible) -->
+              <section id="pane-profile" class="acct-pane show">
+                <h3 class="pane-title">Profile</h3>
+
+                <!-- Card like your screenshot -->
+                <div class="profile-card">
+                  <header class="card-head">Jiminy Cricket</header>
+                  <div class="card-body">
+                    <div class="kv">
+                      <div class="k">Username</div>
+                      <div class="v">J_Cricket</div>
+                    </div>
+                    <div class="kv">
+                      <div class="k">Email</div>
+                      <div class="v">jimcricket@bugmail.ca</div>
+                    </div>
+                    <div class="kv">
+                      <div class="k">School</div>
+                      <div class="v">Simon Fraser University</div>
+                    </div>
+                    <button class="mini">Edit</button>
+                  </div>
+                </div>
+
+                <h4 class="group-title">Account Security</h4>
+                <div class="btn-row">
+                  <button class="pill blue">Reset Password</button>
+                  <button class="pill red">Disable Account</button>
+                  <button class="pill red outline">Delete Account</button>
+                </div>
+              </section>
+
+              <!-- Empty panes for later: just placeholders -->
+              <section id="pane-security" class="acct-pane"><h3 class="pane-title">Security</h3></section>
+              <section id="pane-preferences" class="acct-pane"><h3 class="pane-title">Preferences</h3></section>
+              <section id="pane-billing" class="acct-pane"><h3 class="pane-title">Billing</h3></section>
+            </div>
+          </div>
+        </section>
   </main>
 
 
@@ -371,7 +546,6 @@
     </div>
   </template>
 
-  <script src="script.js"> initApp(); </script>
   <script>
     // ================ JS: behavior (think: event handlers / state machines) ================
     "use strict";
@@ -384,12 +558,11 @@
 
     // --- Odds buttons -> open right-side panel ---
     const slipPanel = document.getElementById('slipPanel');
-
+    
     function openSlipPanel(payloadHtml) {
-      // inject some placeholder content for now
       slipPanel.innerHTML = payloadHtml;
-      slipPanel.classList.add('show', 'animate-in');
-      // remove animation class after it runs (so future opens animate again)
+      slipPanel.classList.add('open');          // ← changed
+      slipPanel.classList.add('animate-in');    // keep your little animation
       setTimeout(() => slipPanel.classList.remove('animate-in'), 200);
     }
 
@@ -403,13 +576,14 @@
         const price = e.currentTarget.textContent.trim();
 
         // simple payload (you’ll replace with real content later)
+
         const html = `
           <strong>Selection added</strong>
           <div style="margin-top:.4rem">
             ${teams[0]} <em style="opacity:.8">vs</em> ${teams[1]}
           </div>
           <div style="margin-top:.3rem">Price: <code>${price}</code></div>
-          <div style="margin-top:.6rem; font-size:.9rem; opacity:.9">[More controls will go here]</div>
+          <button id="checkoutBtn" class="checkout-btn">Checkout</button>
         `;
 
         openSlipPanel(html);
@@ -450,6 +624,52 @@
         }
       });
     }
+    // --- Account view toggle ---
+    // sections
+    const fasSection = document.getElementById('FAS');
+    const accountSection = document.getElementById('account');
+
+    // header link
+    const accountLink = document.getElementById('accountLink');
+
+    // tabs inside account
+    const tabButtons = document.querySelectorAll('.acct-tab');
+    const panes = {
+      profile: document.getElementById('pane-profile'),
+      security: document.getElementById('pane-security'),
+      preferences: document.getElementById('pane-preferences'),
+      billing: document.getElementById('pane-billing'),
+    };
+
+    // show account and default to Profile
+    function showAccount(defaultKey = 'profile') {
+      // hide your catalog section (cat-box lives here)
+      if (fasSection) fasSection.style.display = 'none';
+      // show account section
+      accountSection?.classList.add('show');
+
+      // activate default tab/pane
+      tabButtons.forEach(b => b.classList.toggle('is-active', b.dataset.target === defaultKey));
+      Object.keys(panes).forEach(k => panes[k]?.classList.toggle('show', k === defaultKey));
+      // optional: scroll content area into view
+      accountSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // click “Account” in header
+    accountLink?.addEventListener('click', (e) => {
+      e.preventDefault();
+      showAccount('profile');
+    });
+
+    // click tabs on the left list
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.target;
+        tabButtons.forEach(b => b.classList.toggle('is-active', b === btn));
+        Object.keys(panes).forEach(k => panes[k]?.classList.toggle('show', k === key));
+      });
+    });
+
 
 
   </script>
